@@ -3,13 +3,14 @@ import argparse
 import re
 import os
 import constants
-from utils import parse_string, correct_prediction
+from utils import parse_string
 
 def check_file(filename):
     if not filename.lower().endswith('.csv'):
         raise ValueError("Only CSV files are allowed.")
     if not os.path.exists(filename):
         raise FileNotFoundError("Filepath: {} invalid or not found.".format(filename))
+    
 
 def sanity_check(test_filename, output_filename):
     check_file(test_filename)
@@ -37,8 +38,7 @@ def sanity_check(test_filename, output_filename):
     if len(extra_index) != 0:
         print("Extra index in test file: {}".format(extra_index))
         
-    output_df['prediction'] = output_df.apply(lambda x: (correct_prediction(x['prediction'], error_type) if (number := parse_string(x['prediction'], x['index'])[0]) is None and (error_type := parse_string(x['prediction'], x['index'])[2]) is not None else x['prediction']), axis=1)
-    output_df.to_csv(output_filename, index=False)
+    output_df.apply(lambda x: parse_string(x['prediction']), axis=1)
     print("Parsing successfull for file: {}".format(output_filename))
     
 if __name__ == "__main__":
