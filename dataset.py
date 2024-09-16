@@ -8,8 +8,8 @@ import ujson as json
 from torch.utils.data import Dataset
 from qwen_vl_utils import process_vision_info
 
-from .params import DataArguments
-from .constants import *
+from params import DataArguments
+from constants import *
 
 def truncate_sequence(input_ids, labels, max_length, eos_token_id):
     if input_ids.size(0) > max_length:

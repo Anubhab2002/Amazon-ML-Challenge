@@ -3,10 +3,10 @@ import torch
 from peft import LoraConfig, get_peft_model
 import ast
 from transformers import AutoProcessor, BitsAndBytesConfig, Qwen2VLForConditionalGeneration, HfArgumentParser
-from training.trainer import QwenTrainer
-from training.data import make_supervised_data_module
-from training.params import DataArguments, ModelArguments, TrainingArguments
-from training.train_utils import get_peft_state_maybe_zero_3, get_peft_state_non_lora_maybe_zero_3, safe_save_model_for_hf_trainer
+from trainer import QwenTrainer
+from dataset import make_supervised_data_module
+from params import DataArguments, ModelArguments, TrainingArguments
+from train_utils import get_peft_state_maybe_zero_3, get_peft_state_non_lora_maybe_zero_3, safe_save_model_for_hf_trainer
 import pathlib
 from liger_kernel.transformers import apply_liger_kernel_to_qwen2_vl
 
@@ -50,6 +50,7 @@ def configure_vision_tower(model, training_args, compute_dtype, device):
     set_requires_grad(merger_params, training_args.tune_merger)
 
 def train():
+    print("STARTING TRAINING...")
     global local_rank
 
     parser = HfArgumentParser(
@@ -96,6 +97,8 @@ def train():
         _attn_implementation="flash_attention_2" if not training_args.disable_flash_attn2 else "eager", 
         **bnb_model_from_pretrained_args
     )
+    
+    print("MODEL HAS BEEN LOADED...")
 
     model.config.use_cache = False
 
@@ -125,6 +128,8 @@ def train():
         rank0_print("Adding LoRA to the model...")
         model = get_peft_model(model, peft_config)
 
+    print("PEFT MODEL ENABLED...")
+    
     processor = AutoProcessor.from_pretrained(model_args.model_id,
                                               padding_side="right",
                                               min_pixels=data_args.min_pixels,
@@ -160,7 +165,8 @@ def train():
 
     data_module = make_supervised_data_module(processor=processor,
                                               data_args=data_args)
-
+    print("DATA MODULE CREATED...")
+        
     trainer = QwenTrainer(
         model=model,
         processor=processor,
