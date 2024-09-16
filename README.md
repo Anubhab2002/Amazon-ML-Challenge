@@ -75,32 +75,45 @@ Steps explaining how to run this work as pipeline are as follows:
 
 1. ### Training
     A. Download the required libraries (remember to download the most recent versions transformers)
+
     B. You can either use the custom training script for training or the bundled version using `swift` library. Both are equally fine. 
+
     NOTE: You may need higher RAM (>40GB) for training the model with the custom training script because of parameters and optimizer offloading using Deepspeed zero3 config.
+
     C. Create a **stratified training sample** maintaining the distribution between the classes of `entity_names`.
+
     D. Download required images using the image_downloader function. It involves *chunking* and *multiprocessing* for faster downloading of images (~30sec/2000images)
+
     E. Prepare the dataset as a `json` object to feed into the model.
+
     F. Run the training with required arguments.
     *Model Used*: `Qwen-VL-2B-Instruct` by Alibaba
-    *Why Qwen-VL?*
-    Ans:  Because `Qwen-VL` is among the top-5 models in the OCRBench and has a 2B parameters model which is easier to train with the compute constraints.
-    G. Save the model checkpoint locally. We used PeFT (using `swift`) and LoRA for finetuining. Hence, the checkpoint only saves LoRA adapters and optimizer thus making it very lightweight (~200-300MB)
+
+*Why Qwen-VL?*
+Ans:  Because `Qwen-VL` is among the top-5 models in the OCRBench and has a 2B parameters model which is easier to train with the compute constraints.
+G. Save the model checkpoint locally. We used PeFT (using `swift`) and LoRA for finetuining. Hence, the checkpoint only saves LoRA adapters and optimizer thus making it very lightweight (~200-300MB)
 
 2.  ### Inference
     A. Install the required libraries
+
     B. Have the finetuned model checkpoint on a writable path
+
     C. Download the test images and prepare the `test.json` with required system, user prompts with path to images.
+
     D. Run inference using `gptq` and `4 bit` quantisation.
+
     E. Convert the output `jsonl` into required `csv` format.
 3. ### Postprocessing
     A. If the inference has been done in splits, you can make use of the `merge_csv.py` script to get the full_predictions.csv (final submittable).
     ```
     python3 merge_csv.py 
     ```
+
     B. Since we are using a generative model, there are bound to be some rouge outputs which need to be cleaned. Run:
     ```
     python3 postprocessing.py --test_filename test.csv --output_filename full_predictions.csv
     ```
+    
     C. Finally run sanity check to see if the output is properly formatted and will pass evaluation.
     ```
     python3 amc_code/sanity.py --test_filename test.csv --output_filename full_predictions_2.csv
